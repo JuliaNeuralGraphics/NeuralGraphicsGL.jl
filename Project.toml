@@ -13,7 +13,7 @@ ModernGL = "66fc600b-dfda-50eb-8b99-91cfa97b1301"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-CImGui = "1.82.0"
+julia = "1.6"
 ModernGL = "1.1.6"
 StaticArrays = "1.5.16"
 FileIO = "1.16.0"
