@@ -204,6 +204,9 @@ function Context(
     glfw_ctx = CImGui.ImGuiGLFWBackend.create_context(window)
     gl_ctx = CImGui.ImGuiOpenGLBackend.create_context(GLSL_VERSION)
 
+    io = CImGui.GetIO()
+    io.ConfigFlags = unsafe_load(io.ConfigFlags) | CImGui.ImGuiConfigFlags_DockingEnable
+
     CImGui.ImGuiGLFWBackend.init(glfw_ctx)
     CImGui.ImGuiOpenGLBackend.init(gl_ctx)
     Context(window, imgui_ctx, glfw_ctx, gl_ctx, width, height)
