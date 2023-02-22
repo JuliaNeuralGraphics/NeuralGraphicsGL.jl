@@ -1,3 +1,4 @@
 *.png
 imgui.ini
 test/Manifest.toml
+Manifest.toml
