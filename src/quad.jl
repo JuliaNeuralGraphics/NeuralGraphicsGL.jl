@@ -10,8 +10,11 @@ mutable struct RenderSurface
     va::VertexArray
 end
 
-function RenderSurface(; width::Integer, height::Integer)
-    texture = Texture(width, height; internal_format=GL_RGB32F, type=GL_FLOAT)
+function RenderSurface(;
+    width::Integer, height::Integer,
+    internal_format = GL_RGB32F, data_type = GL_FLOAT,
+)
+    texture = Texture(width, height; internal_format, type=data_type)
     program = get_program(RenderSurface)
     bind(program)
     upload_uniform(program, "u_Texture", 0)
