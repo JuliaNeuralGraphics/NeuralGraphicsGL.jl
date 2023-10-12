@@ -87,38 +87,48 @@ function look_at(position, target, up)
     X  = normalize(normalize(up) × Z)
     Y = Z × X
 
-    SMatrix{4, 4, Float32}(
+    SMatrix{4, 4, Float32, 16}(
         X[1], Y[1], Z[1], 0f0,
         X[2], Y[2], Z[2], 0f0,
         X[3], Y[3], Z[3], 0f0,
         X ⋅ -position, Y ⋅ -position, Z ⋅ -position, 1f0)
 end
 
-function _frustum(left, right, bottom, top, znear, zfar)
+function _frustum(left, right, bottom, top, znear, zfar; zsign::Float32 = -1f0)
     (right == left || bottom == top || znear == zfar) &&
-        return SMatrix{4, 4, Float32}(I)
+        return SMatrix{4, 4, Float32, 16}(I)
 
     rl = 1f0 / (right - left)
     tb = 1f0 / (top - bottom)
     zz = 1f0 / (zfar - znear)
 
-    SMatrix{4, 4, Float32}(
+    SMatrix{4, 4, Float32, 16}(
         2f0 * znear * rl, 0f0, 0f0, 0f0,
         0f0, 2f0 * znear * tb, 0f0, 0f0,
-        (right + left) * rl, (top + bottom) * tb, -(zfar + znear) * zz, -1f0,
+        (right + left) * rl, (top + bottom) * tb, zsign * (zfar + znear) * zz, zsign,
         0f0, 0f0, (-2f0 * znear * zfar) * zz, 0f0)
 end
 
 """
+- `fovx`: In degrees.
 - `fovy`: In degrees.
 """
-function perspective(fovy, aspect, znear, zfar)
+function perspective(fovx, fovy, znear, zfar; zsign::Float32 = -1f0)
+    (znear == zfar) &&
+        error("znear `$znear` must be different from zfar `$zfar`")
+
+    w = tan(0.5f0 * deg2rad(fovx)) * znear
+    h = tan(0.5f0 * deg2rad(fovy)) * znear
+    _frustum(-w, w, -h, h, znear, zfar; zsign)
+end
+
+function perspective(fovy, znear, zfar; aspect::Float32, zsign::Float32 = -1f0)
     (znear == zfar) &&
         error("znear `$znear` must be different from zfar `$zfar`")
 
     h = tan(0.5f0 * deg2rad(fovy)) * znear
     w = h * aspect
-    _frustum(-w, w, -h, h, znear, zfar)
+    _frustum(-w, w, -h, h, znear, zfar; zsign)
 end
 
 abstract type AbstractTexture end
