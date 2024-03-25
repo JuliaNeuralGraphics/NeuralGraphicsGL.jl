@@ -18,5 +18,8 @@ end
 - `fL`: Frustum camera's look at matrix.
 - `P`: User controlled camera's perspective matrix.
 - `L`: User controlled camera's look at matrix.
+- `color`: Color of the frustum.
 """
-draw(f::Frustum, fL, P, L) = draw(f.box_clip_space, P, L * inv(fL))
+function draw(f::Frustum, fL, P, L; color::SVec4f0 = SVec4f0(1f0, 0f0, 0f0, 1f0))
+    draw(f.box_clip_space, P, L * inv(fL); color)
+end
