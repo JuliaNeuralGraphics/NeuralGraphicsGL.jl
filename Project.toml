@@ -1,7 +1,7 @@
 name = "NeuralGraphicsGL"
 uuid = "263f7e6d-e369-49af-a86e-c85638573b76"
 authors = ["Anton Smirnov <tonysmn97@gmail.com>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 CImGui = "5d785b6c-b76f-510e-a07c-3070796c7e87"
