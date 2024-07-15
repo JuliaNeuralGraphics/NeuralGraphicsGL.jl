@@ -1,5 +1,5 @@
 using CImGui
-using CImGui.ImGuiGLFWBackend.LibGLFW
+using GLFW
 using LinearAlgebra
 using StaticArrays
 using ModernGL
@@ -26,7 +26,7 @@ function main()
     elapsed_time = 0.0
 
     NGL.render_loop(context; destroy_context=false) do
-        NGL.imgui_begin(context)
+        NGL.imgui_begin()
 
         NGL.bind(fb)
 
@@ -60,9 +60,9 @@ function main()
         CImGui.Text("HI!")
         CImGui.End()
 
-        NGL.imgui_end(context)
-        glfwSwapBuffers(context.window)
-        glfwPollEvents()
+        NGL.imgui_end()
+        GLFW.SwapBuffers(context.window)
+        GLFW.PollEvents()
 
         delta_time = time() - last_time
         last_time = time()

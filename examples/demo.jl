@@ -1,5 +1,5 @@
 using CImGui
-using CImGui.ImGuiGLFWBackend.LibGLFW
+using GLFW
 using LinearAlgebra
 using StaticArrays
 using NeuralGraphicsGL
@@ -31,7 +31,7 @@ function main()
     NGL.enable_blend()
 
     NGL.render_loop(context; destroy_context=false) do
-        NGL.imgui_begin(context)
+        NGL.imgui_begin()
         NGL.clear()
         NGL.set_clear_color(0.2, 0.2, 0.2, 1.0)
 
@@ -52,9 +52,9 @@ function main()
         CImGui.Text("HI!")
         CImGui.End()
 
-        NGL.imgui_end(context)
-        glfwSwapBuffers(context.window)
-        glfwPollEvents()
+        NGL.imgui_end()
+        GLFW.SwapBuffers(context.window)
+        GLFW.PollEvents()
 
         delta_time = time() - last_time
         last_time = time()

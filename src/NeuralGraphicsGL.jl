@@ -1,13 +1,16 @@
 module NeuralGraphicsGL
 
 using CImGui
-using CImGui.ImGuiGLFWBackend.LibGLFW
 using FileIO
 using ImageCore
 using ImageIO
 using LinearAlgebra
-using ModernGL
 using StaticArrays
+
+using GLFW
+using ModernGL
+
+import CImGui.lib as lib
 
 """
 Replaces:
@@ -147,11 +150,11 @@ include("line.jl")
 include("frustum.jl")
 include("widget.jl")
 
-const GLSL_VERSION = 410
+const GLSL_VERSION = 130
 
 function init(version_major::Integer = 3, version_minor::Integer = 0)
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, version_major)
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, version_minor)
+    GLFW.WindowHint(GLFW.CONTEXT_VERSION_MAJOR, version_major)
+    GLFW.WindowHint(GLFW.CONTEXT_VERSION_MINOR, version_minor)
 end
 
 function get_gl_version()
@@ -161,10 +164,8 @@ function get_gl_version()
 end
 
 struct Context
-    window::Ptr{GLFWwindow}
+    window::GLFW.Window
     imgui_ctx::Ptr{CImGui.ImGuiContext}
-    glfw_ctx::CImGui.ImGuiGLFWBackend.Context
-    gl_ctx::CImGui.ImGuiOpenGLBackend.Context
 
     width::Int64
     height::Int64
@@ -181,45 +182,52 @@ function Context(
         error("You need to specify either `fullscreen` or `width` & `height` parameters.")
     end
 
-    glfwWindowHint(GLFW_VISIBLE, visible)
-    if fullscreen
-        glfwWindowHint(GLFW_RESIZABLE, false)
-        monitor = glfwGetPrimaryMonitor()
-        mode = unsafe_load(glfwGetVideoMode(monitor))
-        window = glfwCreateWindow(mode.width, mode.height, title, monitor, C_NULL)
+    imgui_ctx = CImGui.CreateContext()
+
+    GLFW.Init()
+    GLFW.WindowHint(GLFW.VISIBLE, visible)
+
+    window = if fullscreen
+        GLFW.WindowHint(GLFW.RESIZABLE, false)
+        monitor = GLFW.GetPrimaryMonitor()
+        mode = unsafe_load(GLFW.GetVideoMode(monitor))
+
         width, height = mode.width, mode.height
+        GLFW.CreateWindow(width, height, title, monitor)
     else
-        glfwWindowHint(GLFW_RESIZABLE, resizable)
-        window = glfwCreateWindow(width, height, title, C_NULL, C_NULL)
+        GLFW.WindowHint(GLFW.RESIZABLE, resizable)
+        GLFW.CreateWindow(width, height, title)
     end
-    glfwMakeContextCurrent(window)
-    glfwSwapInterval(vsync ? 1 : 0)
+    @assert window != C_NULL
+
+    GLFW.MakeContextCurrent(window)
+    GLFW.SwapInterval(vsync ? 1 : 0)
+
+    # Setup Platform/Renderer bindings.
+    lib.ImGui_ImplGlfw_InitForOpenGL(Ptr{lib.GLFWwindow}(window.handle), true)
+    lib.ImGui_ImplOpenGL3_Init("#version $GLSL_VERSION")
+
     # You need this for RGB textures that their width is not a multiple of 4.
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
 
-    #enable depth buffer
+    # Enable depth buffer.
     glEnable(GL_DEPTH_TEST)
     glDepthMask(GL_TRUE)
     glClearDepth(1.0f0)
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
-    imgui_ctx = CImGui.CreateContext()
+    # Set ImGui syle.
     CImGui.StyleColorsDark()
     style = CImGui.GetStyle()
     style.FrameRounding = 0f0
     style.WindowRounding = 0f0
     style.ScrollbarRounding = 0f0
 
-    glfw_ctx = CImGui.ImGuiGLFWBackend.create_context(window)
-    gl_ctx = CImGui.ImGuiOpenGLBackend.create_context(GLSL_VERSION)
-
     io = CImGui.GetIO()
     io.ConfigFlags = unsafe_load(io.ConfigFlags) | CImGui.ImGuiConfigFlags_DockingEnable
 
-    CImGui.ImGuiGLFWBackend.init(glfw_ctx)
-    CImGui.ImGuiOpenGLBackend.init(gl_ctx)
-    Context(window, imgui_ctx, glfw_ctx, gl_ctx, width, height)
+    Context(window, imgui_ctx, width, height)
 end
 
 enable_blend() = glEnable(GL_BLEND)
@@ -236,32 +244,31 @@ disable_wireframe() = glPolygonMode(GL_FRONT_AND_BACK, GL_FILL)
 
 function delete!(c::Context)
     imgui_shutdown!(c)
-    glfwDestroyWindow(c.window)
+    GLFW.DestroyWindow(c.window)
 end
 
 function set_resizable_window!(c::Context, resizable::Bool)
-    glfwSetWindowAttrib(c.window, GLFW_RESIZABLE, resizable)
+    GLFW.SetWindowAttrib(c.window, GLFW.RESIZABLE, resizable)
 end
 
 function set_resize_callback!(c::Context, callback)
-    glfwSetWindowSizeCallback(
-        c.window, @cfunction($callback, Cvoid, (Ptr{GLFWwindow}, Cint, Cint)))
+    GLFW.SetWindowSizeCallback(c.window, callback)
 end
 
-function imgui_begin(c::Context)
-    CImGui.ImGuiOpenGLBackend.new_frame(c.gl_ctx)
-    CImGui.ImGuiGLFWBackend.new_frame(c.glfw_ctx)
+function imgui_begin()
+    lib.ImGui_ImplOpenGL3_NewFrame()
+    lib.ImGui_ImplGlfw_NewFrame()
     CImGui.NewFrame()
 end
 
-function imgui_end(c::Context)
+function imgui_end()
     CImGui.Render()
-    CImGui.ImGuiOpenGLBackend.render(c.gl_ctx)
+    lib.ImGui_ImplOpenGL3_RenderDrawData(Ptr{Cint}(CImGui.GetDrawData()))
 end
 
 function imgui_shutdown!(c::Context)
-    CImGui.ImGuiOpenGLBackend.shutdown(c.gl_ctx)
-    CImGui.ImGuiGLFWBackend.shutdown(c.glfw_ctx)
+    lib.ImGui_ImplOpenGL3_Shutdown()
+    lib.ImGui_ImplGlfw_Shutdown()
     CImGui.DestroyContext(c.imgui_ctx)
 end
 
@@ -271,13 +278,13 @@ set_clear_color(r, g, b, a) = glClearColor(r, g, b, a)
 
 set_viewport(width, height) = glViewport(0, 0, width, height)
 
-hide_cursor(w::GLFWwindow) = glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_DISABLED)
+hide_cursor(w::GLFW.Window) = GLFW.SetInputMode(w, GLFW.CURSOR, GLFW.CURSOR_DISABLED)
 
-show_cursor(w::GLFWwindow) = glfwSetInputMode(w, GLFW_CURSOR, GLFW_CURSOR_NORMAL)
+show_cursor(w::GLFW.Window) = GLFW.SetInputMode(w, GLFW.CURSOR, GLFW.CURSOR_NORMAL)
 
 function render_loop(draw_function, c::Context; destroy_context::Bool = true)
     try
-        while glfwWindowShouldClose(c.window) == 0
+        while GLFW.WindowShouldClose(c.window) == 0
             is_running = draw_function()
             is_running || break
         end
