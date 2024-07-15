@@ -1,7 +1,7 @@
 name = "NeuralGraphicsGL"
 uuid = "263f7e6d-e369-49af-a86e-c85638573b76"
 authors = ["Anton Smirnov <tonysmn97@gmail.com>"]
-version = "0.2.1"
+version = "0.3.0"
 
 [deps]
 CImGui = "5d785b6c-b76f-510e-a07c-3070796c7e87"
@@ -14,7 +14,8 @@ ModernGL = "66fc600b-dfda-50eb-8b99-91cfa97b1301"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
-CImGui = "2"
+CImGui = "2.0"
+GLFW = "3.4"
 FileIO = "1.16"
 ImageCore = "0.10"
 ImageIO = "0.6"
