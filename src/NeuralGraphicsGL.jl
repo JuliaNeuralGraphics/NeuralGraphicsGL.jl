@@ -85,16 +85,18 @@ const SVec4f0 = SVector{4, Float32}
 const SMat3f0 = SMatrix{3, 3, Float32}
 const SMat4f0 = SMatrix{4, 4, Float32}
 
-function look_at(position, target, up)
-    Z = normalize(position - target)
-    X  = normalize(normalize(up) × Z)
-    Y = Z × X
+function look_at(position, target, up; left_handed::Bool = true)
+    Z = left_handed ?                # front
+        normalize(position - target) :
+        normalize(target - position)
+    X  = normalize(normalize(up) × Z) # right
+    Y = Z × X                         # up
 
     SMatrix{4, 4, Float32, 16}(
         X[1], Y[1], Z[1], 0f0,
         X[2], Y[2], Z[2], 0f0,
         X[3], Y[3], Z[3], 0f0,
-        X ⋅ -position, Y ⋅ -position, Z ⋅ -position, 1f0)
+        -(X ⋅ position), -(Y ⋅ position), -(Z ⋅ position), 1f0)
 end
 
 function _frustum(left, right, bottom, top, znear, zfar; zsign::Float32 = -1f0)
