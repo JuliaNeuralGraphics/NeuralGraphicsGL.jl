@@ -9,6 +9,7 @@ import NeuralGraphicsGL as NGL
 function main()
     NGL.init()
     context = NGL.Context("でも"; width=1280, height=960)
+    # context = NGL.Context("でも"; fullscreen=true)
     NGL.set_resize_callback!(context, NGL.resize_callback)
 
     bbox = NGL.Box(zeros(SVector{3, Float32}), ones(SVector{3, Float32}))

@@ -192,7 +192,7 @@ function Context(
     window = if fullscreen
         GLFW.WindowHint(GLFW.RESIZABLE, false)
         monitor = GLFW.GetPrimaryMonitor()
-        mode = unsafe_load(GLFW.GetVideoMode(monitor))
+        mode = GLFW.GetVideoMode(monitor)
 
         width, height = mode.width, mode.height
         GLFW.CreateWindow(width, height, title, monitor)
