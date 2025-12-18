@@ -1,23 +1,17 @@
 struct Shader
     id::UInt32
 end
-
-function Shader(type::UInt32, code::String)
-    Shader(compile_shader(type, code))
-end
+Shader(type::UInt32, code::String) = Shader(compile_shader(type, code))
 
 function compile_shader(type::UInt32, code::String)
     id = @gl_check(glCreateShader(type))
     id == 0 && error("Failed to create shader of type: $type")
 
-    raw_code = pointer([convert(Ptr{UInt8}, pointer(code))])
-    raw_code = convert(Ptr{UInt8}, raw_code)
+    raw_code = Ref{Ptr{UInt8}}(pointer(code))
     @gl_check(glShaderSource(id, 1, raw_code, C_NULL))
-
     @gl_check(glCompileShader(id))
     validate_shader(id)
-
-    id
+    return id
 end
 
 delete!(s::Shader) = @gl_check(glDeleteShader(s.id))
