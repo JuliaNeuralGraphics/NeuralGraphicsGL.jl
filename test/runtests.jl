@@ -3,7 +3,7 @@ using StaticArrays
 using ModernGL
 using NeuralGraphicsGL
 
-NeuralGraphicsGL.init(4, 4)
+NeuralGraphicsGL.init(4, 1)
 
 function in_gl_ctx(test_function)
     ctx = NeuralGraphicsGL.Context("Test"; width=64, height=64)
