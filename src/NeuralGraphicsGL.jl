@@ -152,9 +152,7 @@ include("line.jl")
 include("frustum.jl")
 include("widget.jl")
 
-const GLSL_VERSION = 130
-
-function init(version_major::Integer = 3, version_minor::Integer = 0)
+function init(version_major::Integer = 3, version_minor::Integer = 3)
     GLFW.WindowHint(GLFW.CONTEXT_VERSION_MAJOR, version_major)
     GLFW.WindowHint(GLFW.CONTEXT_VERSION_MINOR, version_minor)
 end
@@ -207,7 +205,7 @@ function Context(
 
     # Setup Platform/Renderer bindings.
     lib.ImGui_ImplGlfw_InitForOpenGL(Ptr{lib.GLFWwindow}(window.handle), true)
-    lib.ImGui_ImplOpenGL3_Init("#version $GLSL_VERSION")
+    lib.ImGui_ImplOpenGL3_Init("#version 330")
 
     # You need this for RGB textures that their width is not a multiple of 4.
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1)
